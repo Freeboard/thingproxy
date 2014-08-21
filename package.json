@@ -6,7 +6,7 @@
 	"author": "Jim Heising <jim@buglabs.net>",
 	"license": "MIT",
 	"dependencies": {
-		"request": "^2.40.0",
-		"tokenthrottle": "^1.1.0"
+		"request": "2.40.0",
+		"tokenthrottle": "1.1.0"
 	}
 }
