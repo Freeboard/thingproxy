@@ -19,11 +19,7 @@ Dashboards created with freeboard normally access APIs directly from ajax calls 
 
 ### how?
 
-Just call the url with the form:
-
-```
-http(s)://thingproxy.freeboard.io/fetch/<my_api_url>
-```
+Just prefix any url with http(s)://thingproxy.freeboard.io/fetch/
 
 For example:
 
@@ -39,4 +35,4 @@ Don't abuse the thingproxy.freeboard.io server— it is meant for relatively sma
 
 ### privacy
 
-thingproxy.freeboard.io does log the date, requester's IP address, and URL for each request sent to it. We will not share or sell this data to anyone period.
+thingproxy.freeboard.io does log the date, requester's IP address, and URL for each request sent to it. We will not share or sell this data to anyone, period.
