@@ -51,6 +51,12 @@ function processRequest(req, res)
 			return sendInvalidURLResponse(res);
 		}
 
+		// We don't support relative links
+		if(!remoteURL.host)
+		{
+			return writeResponse(res, 400, "relative URLS are not supported");
+		}
+
 		// We only support http and https
 		if (remoteURL.protocol != "http:" && remoteURL.protocol !== "https:") {
 			return writeResponse(res, 400, "only http and https are supported");
@@ -65,8 +71,6 @@ function processRequest(req, res)
 		});
 
 		proxyRequest.on('error', function(err){
-
-			console.log(err);
 
 			if(err.code === "ENOTFOUND")
 			{
