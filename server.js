@@ -120,7 +120,10 @@ http.createServer(function (req, res) {
 	var remoteIP = getClientAddress(req);
 
 	// Log our request
-	console.log("%s %s %s", (new Date()).toJSON(), remoteIP, req.method, req.url);
+	if(config.enable_logging)
+	{
+		console.log("%s %s %s", (new Date()).toJSON(), remoteIP, req.method, req.url);
+	}
 
 	if(config.enable_rate_limiting)
 	{
