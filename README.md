@@ -35,4 +35,4 @@ Don't abuse the thingproxy.freeboard.io server— it is meant for relatively sma
 
 ### privacy
 
-thingproxy.freeboard.io does log the date, requester's IP address, and URL for each request sent to it. We will not share or sell this data to anyone, period.
+thingproxy.freeboard.io does log the date, requester's IP address, and URL for each request sent to it. We do not log headers or request bodies. We will not share or sell this data to anyone, period.
