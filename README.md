@@ -9,7 +9,7 @@ thingproxy allows javascript code on your site to access resources on other doma
 
 In addition, some browsers don't allow requests for non-encrypted HTTP data if the page itself is loaded from HTTPS. thingproxy also allows you to access non-secure HTTP API's from a secure HTTPS url. 
 
-While you can run your own thingproxy server with this source code, but freeboard.io offers a free proxy available at:
+We encourage you to run your own thingproxy server with this source code, but freeboard.io offers a free proxy available at:
 
 http://thingproxy.freeboard.io and https://thingproxy.freeboard.io
 
