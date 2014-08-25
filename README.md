@@ -15,7 +15,7 @@ http://thingproxy.freeboard.io and https://thingproxy.freeboard.io
 
 ### why?
 
-Dashboards created with freeboard normally access APIs directly from ajax calls from javascript. Many API providers do not provide the proper CORS headers, or don't support HTTPS— thing proxy is provided to overcome these limitations.
+Dashboards created with freeboard normally access APIs directly from ajax calls from javascript. Many API providers do not provide the proper CORS headers, or don't support HTTPS— thingproxy is provided to overcome these limitations.
 
 ### how?
 
