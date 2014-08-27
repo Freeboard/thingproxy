@@ -1,12 +1,13 @@
 {
-	"name": "thingproxy.freeboard.io",
-	"version": "0.0.1",
-	"description": "A simple forward proxy server for processing API calls to servers that don't send CORS headers or support HTTPS.",
-	"main": "server.js",
-	"author": "Jim Heising <jim@buglabs.net>",
-	"license": "MIT",
-	"dependencies": {
-		"request": "2.40.0",
-		"tokenthrottle": "1.1.0"
-	}
+  "name": "thingproxy.freeboard.io",
+  "version": "0.0.1",
+  "description": "A simple forward proxy server for processing API calls to servers that don't send CORS headers or support HTTPS.",
+  "main": "server.js",
+  "author": "Jim Heising <jim@buglabs.net>",
+  "license": "MIT",
+  "dependencies": {
+    "request": "2.40.0",
+    "tokenthrottle": "1.1.0",
+    "public-address": "^0.1.1"
+  }
 }

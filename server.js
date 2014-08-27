@@ -4,6 +4,17 @@ var url = require("url");
 var request = require("request");
 var throttle = require("tokenthrottle")({rate: config.max_requests_per_second});
 
+var publicAddressFinder = require("public-address");
+var publicIP;
+
+// Get our public IP address
+publicAddressFinder(function(err, data){
+	if(!err && data)
+	{
+		publicIP = data.address;
+	}
+});
+
 function addCORSHeaders(req, res)
 {
 	if (req.method.toUpperCase() === "OPTIONS")
@@ -75,9 +86,28 @@ function processRequest(req, res)
 			return writeResponse(res, 404, "relative URLS are not supported");
 		}
 
+		// Naughty, naughty— deny requests to blacklisted hosts
+		if(config.blacklist_hostname_regex.test(remoteURL.hostname))
+		{
+			return writeResponse(res, 400, "naughty, naughty...");
+		}
+
 		// We only support http and https
 		if (remoteURL.protocol != "http:" && remoteURL.protocol !== "https:") {
 			return writeResponse(res, 400, "only http and https are supported");
+		}
+
+		if(publicIP)
+		{
+			// Add an X-Forwarded-For header
+			if(req.headers["x-forwarded-for"])
+			{
+				req.headers["x-forwarded-for"] += ", " + publicIP;
+			}
+			else
+			{
+				req.headers["x-forwarded-for"] = req.clientIP + ", " + publicIP;
+			}
 		}
 
 		var proxyRequest = request({
@@ -140,17 +170,19 @@ http.createServer(function (req, res) {
 		return writeResponse(res, 200);
 	}
 
-	var remoteIP = getClientAddress(req);
+	var clientIP = getClientAddress(req);
+
+	req.clientIP = clientIP;
 
 	// Log our request
 	if(config.enable_logging)
 	{
-		console.log("%s %s %s", (new Date()).toJSON(), remoteIP, req.method, req.url);
+		console.log("%s %s %s", (new Date()).toJSON(), clientIP, req.method, req.url);
 	}
 
 	if(config.enable_rate_limiting)
 	{
-		throttle.rateLimit(remoteIP, function(err, limited) {
+		throttle.rateLimit(clientIP, function(err, limited) {
 			if (limited)
 			{
 				return writeResponse(res, 429, "enhance your calm");
