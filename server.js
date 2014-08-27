@@ -7,7 +7,6 @@ var throttle = require("tokenthrottle")({rate: config.max_requests_per_second});
 function addCORSHeaders(res)
 {
 	res.setHeader("Access-Control-Allow-Origin", "*");
-	res.setHeader("Access-Control-Allow-Credentials", "true");
 }
 
 function writeResponse(res, httpCode, body) {
