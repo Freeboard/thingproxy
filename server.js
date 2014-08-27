@@ -4,9 +4,29 @@ var url = require("url");
 var request = require("request");
 var throttle = require("tokenthrottle")({rate: config.max_requests_per_second});
 
-function addCORSHeaders(res)
+function addCORSHeaders(req, res)
 {
-	res.setHeader("Access-Control-Allow-Origin", "*");
+	if (req.method.toUpperCase() === "OPTIONS")
+	{
+		if(req.headers["access-control-request-headers"])
+		{
+			res.setHeader("Access-Control-Allow-Headers", req.headers["access-control-request-headers"]);
+		}
+
+		if(req.headers["access-control-request-method"])
+		{
+			res.setHeader("Access-Control-Allow-Methods", req.headers["access-control-request-method"]);
+		}
+	}
+
+	if(req.headers["origin"])
+	{
+		res.setHeader("Access-Control-Allow-Origin", req.headers["origin"]);
+	}
+	else
+	{
+		res.setHeader("Access-Control-Allow-Origin", "*");
+	}
 }
 
 function writeResponse(res, httpCode, body) {
@@ -29,10 +49,11 @@ function getClientAddress(req) {
 
 function processRequest(req, res)
 {
-	addCORSHeaders(res);
+	addCORSHeaders(req, res);
 
 	// Return options pre-flight requests right away
-	if (req.method.toUpperCase() === "OPTIONS") {
+	if (req.method.toUpperCase() === "OPTIONS")
+	{
 		return writeResponse(res, 204);
 	}
 
