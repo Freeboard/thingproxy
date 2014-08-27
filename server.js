@@ -4,12 +4,10 @@ var url = require("url");
 var request = require("request");
 var throttle = require("tokenthrottle")({rate: config.max_requests_per_second});
 
-function addCORSHeaders(res) {
+function addCORSHeaders(res)
+{
 	res.setHeader("Access-Control-Allow-Origin", "*");
-	//res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
 	res.setHeader("Access-Control-Allow-Credentials", "true");
-	//res.setHeader("Access-Control-Allow-Headers", "Origin,Content-Type,Accept");
-	res.setHeader("Content-Type", "text/plain");
 }
 
 function writeResponse(res, httpCode, body) {
