@@ -7,15 +7,15 @@ A simple forward proxy server for processing API calls to servers that don't sen
 
 thingproxy allows javascript code on your site to access resources on other domains that would normally be blocked due to the [same-origin policy](http://en.wikipedia.org/wiki/Same_origin_policy). It acts as a proxy between your browser and a remote server and adds the proper CORS headers to the response.
 
-In addition, some browsers don't allow requests for non-encrypted HTTP data if the page itself is loaded from HTTPS. thingproxy can call nonthingproxy also allows you to access non-secure HTTP API's from a secure HTTPS url. 
+In addition, some browsers don't allow requests for non-encrypted HTTP data if the page itself is loaded from HTTPS. thingproxy also allows you to access non-secure HTTP API's from a secure HTTPS url. 
 
-While you can run your own thingproxy server with this source code, but freeboard.io offers a free proxy available at:
+We encourage you to run your own thingproxy server with this source code, but freeboard.io offers a free proxy available at:
 
 http://thingproxy.freeboard.io and https://thingproxy.freeboard.io
 
 ### why?
 
-Dashboards created with freeboard normally access APIs directly from ajax calls from javascript. Many API providers do not provide the proper CORS headers, or don't support HTTPS— thing proxy is provided to overcome these limitations.
+Dashboards created with freeboard normally access APIs directly from ajax calls from javascript. Many API providers do not provide the proper CORS headers, or don't support HTTPS— thingproxy is provided to overcome these limitations.
 
 ### how?
 
