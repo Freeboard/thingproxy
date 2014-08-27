@@ -96,6 +96,7 @@ function processRequest(req, res)
 			}
 			else
 			{
+				console.log("Proxy Request Error: " + err.toString());
 				return writeResponse(res, 500);
 			}
 
