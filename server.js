@@ -110,6 +110,9 @@ function processRequest(req, res)
 			}
 		}
 
+        //Set host header to remote host
+		req.headers["host"] = remoteURL.host;
+
 		var proxyRequest = request({
 			url: remoteURL,
 			headers: req.headers,
