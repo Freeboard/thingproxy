@@ -110,6 +110,9 @@ function processRequest(req, res)
 			}
 		}
 
+        // Make sure the host header is to the URL we're requesting, not thingproxy
+        req.headers["host"] = remoteURL.host;
+
 		var proxyRequest = request({
 			url: remoteURL,
 			headers: req.headers,
