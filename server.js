@@ -116,7 +116,7 @@ function processRequest(req, res) {
                 return writeResponse(res, 502, "host cannot be found.")
             }
             else {
-                console.log("Proxy Request Error: " + err.toString());
+                console.log("Proxy Request Error (" + remoteURL + "): " + err.toString());
                 return writeResponse(res, 500);
             }
 
