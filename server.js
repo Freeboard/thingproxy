@@ -113,10 +113,10 @@ function processRequest(req, res) {
         proxyRequest.on('error', function (err) {
 
             if (err.code === "ENOTFOUND") {
-                return writeResponse(res, 502, "host cannot be found.")
+                return writeResponse(res, 502, "Host for " + url.format(remoteURL) + " cannot be found.")
             }
             else {
-                console.log("Proxy Request Error (" + remoteURL + "): " + err.toString());
+                console.log("Proxy Request Error (" + url.format(remoteURL) + "): " + err.toString());
                 return writeResponse(res, 500);
             }
 
