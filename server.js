@@ -1,9 +1,13 @@
 var http = require('http');
+var https = require('https');
 var config = require("./config");
 var url = require("url");
 var request = require("request");
 var cluster = require('cluster');
 var throttle = require("tokenthrottle")({rate: config.max_requests_per_second});
+
+http.globalAgent.maxSockets = Infinity;
+https.globalAgent.maxSockets = Infinity;
 
 var publicAddressFinder = require("public-address");
 var publicIP;
@@ -133,6 +137,8 @@ function processRequest(req, res) {
                 proxyRequest.end();
                 return sendTooBigResponse(res);
             }
+        }).on('error', function(err){
+            writeResponse(res, 500, "Stream Error");
         });
 
         proxyRequest.pipe(res).on('data', function (data) {
@@ -143,6 +149,8 @@ function processRequest(req, res) {
                 proxyRequest.end();
                 return sendTooBigResponse(res);
             }
+        }).on('error', function(err){
+            writeResponse(res, 500, "Stream Error");
         });
     }
     else {
