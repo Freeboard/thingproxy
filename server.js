@@ -4,7 +4,7 @@ var config = require("./config");
 var url = require("url");
 var request = require("request");
 var cluster = require('cluster');
-var throttle = require("tokenthrottle")({rate: config.max_requests_per_second});
+var throttle = require("tokenthrottle")({ rate: config.max_requests_per_second });
 
 http.globalAgent.maxSockets = Infinity;
 https.globalAgent.maxSockets = Infinity;
@@ -19,7 +19,7 @@ publicAddressFinder(function (err, data) {
     }
 });
 
-function addCORSHeaders(req, res) {
+function addCORSHeaders (req, res) {
     if (req.method.toUpperCase() === "OPTIONS") {
         if (req.headers["access-control-request-headers"]) {
             res.setHeader("Access-Control-Allow-Headers", req.headers["access-control-request-headers"]);
@@ -38,25 +38,25 @@ function addCORSHeaders(req, res) {
     }
 }
 
-function writeResponse(res, httpCode, body) {
+function writeResponse (res, httpCode, body) {
     res.statusCode = httpCode;
     res.end(body);
 }
 
-function sendInvalidURLResponse(res) {
-    return writeResponse(res, 404, "url must be in the form of /fetch/{some_url_here}");
+function sendInvalidURLResponse (res, fetch_regex, url) {
+    return writeResponse(res, 404, "url must be in the form of " + fetch_regex + "{some_url_here}, has " + url);
 }
 
-function sendTooBigResponse(res) {
+function sendTooBigResponse (res) {
     return writeResponse(res, 413, "the content in the request or response cannot exceed " + config.max_request_length + " characters.");
 }
 
-function getClientAddress(req) {
+function getClientAddress (req) {
     return (req.headers['x-forwarded-for'] || '').split(',')[0]
         || req.connection.remoteAddress;
 }
 
-function processRequest(req, res) {
+function processRequest (req, res) {
     addCORSHeaders(req, res);
 
     // Return options pre-flight requests right away
@@ -70,10 +70,11 @@ function processRequest(req, res) {
         var remoteURL;
 
         try {
-            remoteURL = url.parse(decodeURI(result[1]));
+            var unnormalizedUrl = result[1].replace(/^(http(s?):\/)(?!\/)/, '$1/')
+            remoteURL = url.parse(decodeURI(unnormalizedUrl));
         }
         catch (e) {
-            return sendInvalidURLResponse(res);
+            return sendInvalidURLResponse(res, config.fetch_regex, req.url);
         }
 
         // We don't support relative links
@@ -105,7 +106,7 @@ function processRequest(req, res) {
         if (req.headers["host"]) {
             req.headers["host"] = remoteURL.host;
         }
-        
+
         // Remove origin and referer headers. TODO: This is a bit naughty, we should remove at some point.
         delete req.headers["origin"];
         delete req.headers["referer"];
@@ -141,7 +142,7 @@ function processRequest(req, res) {
                 proxyRequest.end();
                 return sendTooBigResponse(res);
             }
-        }).on('error', function(err){
+        }).on('error', function (err) {
             writeResponse(res, 500, "Stream Error");
         });
 
@@ -153,12 +154,12 @@ function processRequest(req, res) {
                 proxyRequest.end();
                 return sendTooBigResponse(res);
             }
-        }).on('error', function(err){
+        }).on('error', function (err) {
             writeResponse(res, 500, "Stream Error");
         });
     }
     else {
-        return sendInvalidURLResponse(res);
+        return sendInvalidURLResponse(res, config.fetch_regex, req.url);
     }
 }
 
@@ -167,8 +168,7 @@ if (cluster.isMaster) {
         cluster.fork();
     }
 }
-else
-{
+else {
     http.createServer(function (req, res) {
 
         // Process AWS health checks
