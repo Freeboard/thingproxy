@@ -70,7 +70,8 @@ function processRequest (req, res) {
         var remoteURL;
 
         try {
-            remoteURL = url.parse(decodeURI(result[1]));
+            var unnormalizedUrl = result[1].replace(/^(http(s?):\/)(?!\/)/, '$1/')
+            remoteURL = url.parse(decodeURI(unnormalizedUrl));
         }
         catch (e) {
             return sendInvalidURLResponse(res, config.fetch_regex);
