@@ -43,8 +43,8 @@ function writeResponse (res, httpCode, body) {
     res.end(body);
 }
 
-function sendInvalidURLResponse (res, fetch_regex) {
-    return writeResponse(res, 404, "url must be in the form of " + fetch_regex + "{some_url_here}");
+function sendInvalidURLResponse (res, fetch_regex, url) {
+    return writeResponse(res, 404, "url must be in the form of " + fetch_regex + "{some_url_here}, has " + url);
 }
 
 function sendTooBigResponse (res) {
@@ -74,7 +74,7 @@ function processRequest (req, res) {
             remoteURL = url.parse(decodeURI(unnormalizedUrl));
         }
         catch (e) {
-            return sendInvalidURLResponse(res, config.fetch_regex);
+            return sendInvalidURLResponse(res, config.fetch_regex, req.url);
         }
 
         // We don't support relative links
@@ -159,7 +159,7 @@ function processRequest (req, res) {
         });
     }
     else {
-        return sendInvalidURLResponse(res, config.fetch_regex);
+        return sendInvalidURLResponse(res, config.fetch_regex, req.url);
     }
 }
 
