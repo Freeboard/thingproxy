@@ -4,6 +4,7 @@ var config = require("./config");
 var url = require("url");
 var request = require("request");
 var cluster = require('cluster');
+var ssrfGuard = require('./ssrf-guard');
 var throttle = require("tokenthrottle")({rate: config.max_requests_per_second});
 
 http.globalAgent.maxSockets = Infinity;
@@ -39,6 +40,10 @@ function addCORSHeaders(req, res) {
 }
 
 function writeResponse(res, httpCode, body) {
+    if (!res.headersSent) {
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+    }
     res.statusCode = httpCode;
     res.end(body);
 }
@@ -52,8 +57,12 @@ function sendTooBigResponse(res) {
 }
 
 function getClientAddress(req) {
-    return (req.headers['x-forwarded-for'] || '').split(',')[0]
-        || req.connection.remoteAddress;
+    // Never key throttling on a client-supplied X-Forwarded-For: there is no
+    // trusted proxy in front of this server, so a client could pick its own
+    // rate-limit bucket and defeat the limit entirely.
+    return (req.socket && req.socket.remoteAddress)
+        || (req.connection && req.connection.remoteAddress)
+        || 'unknown';
 }
 
 function processRequest(req, res) {
@@ -81,10 +90,11 @@ function processRequest(req, res) {
             return writeResponse(res, 404, "relative URLS are not supported");
         }
 
-        // Naughty, naughty— deny requests to blacklisted hosts
-        if (config.blacklist_hostname_regex.test(remoteURL.hostname)) {
-            return writeResponse(res, 400, "naughty, naughty...");
-        }
+        // Destination validation is enforced at connect time by ssrf-guard.js:
+        // the hostname is resolved, every answer is checked against private,
+        // loopback, link-local, ULA and metadata ranges, and the connection is
+        // pinned to the address that was checked. A string prefix regex is not
+        // enough (169.254.169.254, 172.16/12, IPv6, DNS rebinding, "localhost.").
 
         // We only support http and https
         if (remoteURL.protocol != "http:" && remoteURL.protocol !== "https:") {
@@ -110,16 +120,32 @@ function processRequest(req, res) {
         delete req.headers["origin"];
         delete req.headers["referer"];
 
+        // Strip hop-by-hop headers (RFC 7230 6.1) and anything named in
+        // Connection; forwarding them lets the client desync the upstream.
+        var HOP_BY_HOP = [
+            'connection', 'keep-alive', 'proxy-authenticate',
+            'proxy-authorization', 'te', 'trailer', 'transfer-encoding',
+            'upgrade', 'proxy-connection'
+        ];
+        HOP_BY_HOP.forEach(function (header) {
+            delete req.headers[header];
+        });
+
         var proxyRequest = request({
             url: remoteURL,
             headers: req.headers,
             method: req.method,
             timeout: config.proxy_request_timeout_ms,
-            strictSSL: false
+            strictSSL: true,
+            followRedirect: false,
+            lookup: ssrfGuard.safeLookup
         });
 
         proxyRequest.on('error', function (err) {
 
+            if (err.code === 'ESSRF') {
+                return writeResponse(res, 403, "destination host is not allowed");
+            }
             if (err.code === "ENOTFOUND") {
                 return writeResponse(res, 502, "Host for " + url.format(remoteURL) + " cannot be found.")
             }
@@ -130,32 +156,28 @@ function processRequest(req, res) {
 
         });
 
+        // Count bytes on the source streams. pipe() returns the destination,
+        // and the previous code attached the counters to the wrong objects,
+        // so neither limit ever fired.
         var requestSize = 0;
-        var proxyResponseSize = 0;
-
-        req.pipe(proxyRequest).on('data', function (data) {
-
+        req.on('data', function (data) {
             requestSize += data.length;
-
-            if (requestSize >= config.max_request_length) {
-                proxyRequest.end();
-                return sendTooBigResponse(res);
+            if (requestSize > config.max_request_length) {
+                proxyRequest.abort();
+                res.destroy();
             }
-        }).on('error', function(err){
-            writeResponse(res, 500, "Stream Error");
         });
+        req.pipe(proxyRequest);
 
-        proxyRequest.pipe(res).on('data', function (data) {
-
+        var proxyResponseSize = 0;
+        proxyRequest.on('data', function (data) {
             proxyResponseSize += data.length;
-
-            if (proxyResponseSize >= config.max_request_length) {
-                proxyRequest.end();
-                return sendTooBigResponse(res);
+            if (proxyResponseSize > config.max_request_length) {
+                proxyRequest.abort();
+                res.destroy();
             }
-        }).on('error', function(err){
-            writeResponse(res, 500, "Stream Error");
         });
+        proxyRequest.pipe(res);
     }
     else {
         return sendInvalidURLResponse(res);
